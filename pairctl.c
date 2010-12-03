@@ -20,28 +20,30 @@ main(int argc, char **argv)
     char *url;
     u_int32_t cache_time;
 
-    if (argc == 1) {
-        fprintf(err_file, "Usage: %s -r|-w <url_prefix> [cache_time]\n", argv[0]);
+    if (argc < 3) {
+        fprintf(err_file, "Usage: %s <bdb_path> -r|-w <url_prefix> [cache_time]\n", argv[0]);
         return -1;
     }
 
-    if (!strcmp(argv[1], "-w")) {
-        if (argc != 4) {
+    db_path = argv[1];
+
+    if (!strcmp(argv[2], "-w")) {
+        if (argc != 5) {
             fprintf(err_file, "Usage: %s -w <url_prefix> <cache_time>\n", argv[0]);
             return -1;
         }
         op = PUT;
-        url = argv[2];
-        cache_time = atoi(argv[3]);
+        url = argv[3];
+        cache_time = atoi(argv[4]);
     }
 
-    if (!strcmp(argv[1], "-r")) {
-        if(argc != 3) {
+    if (!strcmp(argv[2], "-r")) {
+        if(argc != 4) {
             fprintf(err_file, "Usage: %s -r <url_prefix>\n", argv[0]);
             return -1;
         }
         op = GET;
-        url = argv[2];
+        url = argv[3];
     }
 
     if (op == NONE) {
