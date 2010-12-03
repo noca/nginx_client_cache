@@ -21,7 +21,7 @@ main(int argc, char **argv)
     u_int32_t cache_time;
 
     if (argc < 3) {
-        fprintf(err_file, "Usage: %s <bdb_path> -r|-w <url_prefix> [cache_time]\n", argv[0]);
+        fprintf(err_file, "Usage: %s <bdb_path> -r|-w <url_prefix> [cache_time(s)]\n", argv[0]);
         return -1;
     }
 
@@ -29,7 +29,7 @@ main(int argc, char **argv)
 
     if (!strcmp(argv[2], "-w")) {
         if (argc != 5) {
-            fprintf(err_file, "Usage: %s -w <url_prefix> <cache_time>\n", argv[0]);
+            fprintf(err_file, "Usage: %s <bdb_path> -w <url_prefix> <cache_time(s)>\n", argv[0]);
             return -1;
         }
         op = PUT;
@@ -39,7 +39,7 @@ main(int argc, char **argv)
 
     if (!strcmp(argv[2], "-r")) {
         if(argc != 4) {
-            fprintf(err_file, "Usage: %s -r <url_prefix>\n", argv[0]);
+            fprintf(err_file, "Usage: %s <bdb_path> -r <url_prefix>\n", argv[0]);
             return -1;
         }
         op = GET;
@@ -47,7 +47,7 @@ main(int argc, char **argv)
     }
 
     if (op == NONE) {
-        fprintf(err_file, "Usage: %s -r|-w <url_prefix> [cache_time]\n", argv[0]);
+        fprintf(err_file, "Usage: %s <bdb_path> -r|-w <url_prefix> [cache_time(s)]\n", argv[0]);
         return -1;
     }
 
@@ -92,7 +92,7 @@ main(int argc, char **argv)
         if (ret) {
             dbp->err(dbp, ret, "Put %s<->%u pair failed.", key.data, *((u_int32_t *)data.data));
         } else {
-            printf("Put %s<->%u pair successfully.\n", (char *)key.data, *((u_int32_t *)data.data));
+            printf("Put %s<->%u(s) pair successfully.\n", (char *)key.data, *((u_int32_t *)data.data));
         }
     } else if (op == GET) {
         data.ulen = sizeof(cache_time);
@@ -102,7 +102,7 @@ main(int argc, char **argv)
         if (ret) {
             dbp->err(dbp, ret, "Get %s pair failed.", key.data);
         } else {
-            printf("Get %s<->%u pair successfully.\n", (char *)key.data, *((u_int32_t *)data.data));
+            printf("Get %s<->%u(s) pair successfully.\n", (char *)key.data, *((u_int32_t *)data.data));
         }
     }
 
