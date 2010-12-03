@@ -1,0 +1,163 @@
+Name
+    nginx_client_cache - Use a configured database to change cache-control
+                       header in the response
+
+
+    *This module is not distributed with the Nginx source.* See the
+    installation instructions.
+
+Status
+    This module is still in developing mode, and will come production soon.
+
+
+Synopsis
+
+    location /foo {
+        client_cache bdb:/usr/local/nginx/logs/pair.db;
+
+        # proxy_pass/fastcgi_pass/drizzle_pass/echo/etc...
+        # and also static files on the disk
+    }
+
+Description
+    This module provides a modified repsonse header with configured
+    cache-control to make client(browser or proxy) caching the reponse
+    in a more configurable way.
+
+    The data source now can just be Berkeley DB, while we do not limit
+    it in the future such as mysql or some. The source is a
+    uri_prefix<->max-age pair, which direct the modification of the
+    reponse according to the corresponding uri.
+
+    For main requests, the module works as a filter, which means that
+    all the phases has been passed and the response is well produced.
+
+    For subrequests, we explicitly disallow the use of this module
+    because it's not meaningsome for this module.
+
+Caveat
+    For now, we do not support other data sources like mysql, and we plan
+    to use subrequest and upstream to implement that. But now, just
+    the <bdb:> source.
+
+Directives
+    client_cache bdb:<berkely database file>
+
+Installation
+    1. Grab the nginx source code from nginx.net (< http://nginx.net/ >), for
+        example, the version 0.6.39 (see nginx compatibility),
+    2. and then build the source with this module:
+
+        $ wget 'http://sysoev.ru/nginx/nginx-0.6.39.tar.gz'
+        $ tar -xzvf nginx-0.6.39.tar.gz
+        $ cd nginx-0.6.39/
+
+        # Here we assume you would install you nginx under /usr/local/nginx/.
+        $ ./configure --prefix=/usr/local/nginx \
+            --add-module=/path/to/nginx_client_cache_module
+
+        $ make -j2
+        $ make install
+
+    Download the latest version of the release tarball of this module from
+    nginx_client_cache file list
+    (<http://github.com/noca/nginx_client_cache/downloads>).
+
+Compatibility
+    The following versions of Nginx should work with this module:
+
+    *   0.6.x (last tested: 0.6.39)
+
+    If you find that any particular version of Nginx above 0.6.x does not
+    work with this module, please consider reporting a bug.
+
+Report Bugs
+    Although a lot of effort has been put into testing and code tuning,
+    there must be some serious bugs lurking somewhere in this module. So
+    whenever you are bitten by any quirks, please don't hesitate to
+
+    1.  send a bug report or even patches to <sbc19861004@gmail.com>,
+
+    2.  or create a ticket on the issue tracking interface
+        (<http://github.com/noca/nginx_client_cache/issues>)
+        provided by GitHub.
+
+Source Repository
+    Available on github at noca/nginx_client_cache
+    (<http://github.com/noca/nginx_client_cache>).
+
+ChangeLog
+
+Test Suite
+    This module comes with a Perl-driven test suite which developed by
+    agentzh(Thanks for his source code and also this readme which I copyed
+    and just modify some for me, shame me!). The test cases
+    (<http://github.com/noca/nginx_client_cache/tree/master/test/t
+    />) are declarative
+    (<http://search.cpan.org/perldoc?Test::Base>) module in the Perl world.
+
+    To run it on your side:
+
+        $ cd test
+        $ PATH=/path/to/your/nginx-client_cache_module:$PATH prove -r t
+
+    You need to terminate any Nginx processes before running the test suite
+    if you have changed the Nginx server binary.
+
+    Because a single nginx server (by default, "localhost:1984") is used
+    across all the test scripts (".t" files), it's meaningless to run the
+    test suite in parallel by specifying "-jN" when invoking the "prove"
+    utility.
+
+    Some parts of the test suite requires modules rewrite, and echo
+    to be enabled as well when building Nginx.
+
+TODO
+
+Getting involved
+    You'll be very welcomed to submit patches to the author or just ask for
+    a commit bit to the source repository on GitHub.
+
+Author
+    noca (肖云朋) *<sbc19861004@gmail.com>*
+
+Copyright & License
+    Copyright (c) 2010, Taobao Inc., Alibaba Group ( http://www.taobao.com
+    ).
+
+    Copyright (c) 2009, Yunpeng Xiao (noca) <sbc19861004@gmail.com>.
+
+    This module is licensed under the terms of the BSD license.
+
+    Redistribution and use in source and binary forms, with or without
+    modification, are permitted provided that the following conditions are
+    met:
+
+    *   Redistributions of source code must retain the above copyright
+        notice, this list of conditions and the following disclaimer.
+
+    *   Redistributions in binary form must reproduce the above copyright
+        notice, this list of conditions and the following disclaimer in the
+        documentation and/or other materials provided with the distribution.
+
+    *   Neither the name of the Taobao Inc. nor the names of its
+        contributors may be used to endorse or promote products derived from
+        this software without specific prior written permission.
+
+    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+    IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+    TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+    PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+    HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+    SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+    TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+    PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+    LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+    NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+    SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+See Also
+    No related nginx module, but for that this module may use Berkeley DB for
+    the backend, some knowledge about that is better (http://www.oracle.com/
+    technetwork/database/berkeleydb/overview/index.html).
+
