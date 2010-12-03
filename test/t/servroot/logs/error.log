@@ -1,8 +1,0 @@
-2010/12/02 14:43:51 [notice] 8325#0: using the "epoll" event method
-2010/12/02 14:43:51 [notice] 8325#0: nginx/0.6.39
-2010/12/02 14:43:51 [notice] 8325#0: built by gcc 4.4.5 (Ubuntu/Linaro 4.4.4-14ubuntu5) 
-2010/12/02 14:43:51 [notice] 8325#0: OS: Linux 2.6.35-22-generic
-2010/12/02 14:43:51 [notice] 8325#0: getrlimit(RLIMIT_NOFILE): 1024:1024
-2010/12/02 14:43:52 [notice] 8326#0: signal 3 (SIGQUIT) received, shutting down
-2010/12/02 14:43:52 [info] 8326#0: epoll_wait() failed (4: Interrupted system call)
-2010/12/02 14:43:52 [notice] 8326#0: exit
