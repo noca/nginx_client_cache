@@ -1,0 +1,31 @@
+;; Object client_cache_filter/
+;; SEMANTICDB Tags save file
+(semanticdb-project-database-file "client_cache_filter/"
+  :tables (list 
+   (semanticdb-table "ngx_http_client_cache_filter_source.c"
+    :major-mode 'c-mode
+    :tags '(("ngx_config.h" include (:system-flag t) nil [1 24]) ("ngx_core.h" include (:system-flag t) nil [25 46]) ("ngx_http.h" include (:system-flag t) nil [47 68]) ("ngx_http_client_cache_filter_module.h" include (:system-flag t) nil [69 117]) ("db.h" include (:system-flag t) nil [118 133]) ("ngx_http_upstream_get_expire_pair" function (:typemodifiers ("static") :arguments (("r" variable (:pointer 1 :type ("ngx_http_request_t" type (:type "class") nil nil)) (reparse-symbol arg-sub-list) [186 208]) ("lcf" variable (:pointer 1 :type ("ngx_http_client_cache_filter_loc_conf_t" type (:type "class") nil nil)) (reparse-symbol arg-sub-list) [209 254]) ("e" variable (:pointer 1 :type ("time_t" type (:type "class") nil nil)) (reparse-symbol arg-sub-list) [255 265])) :type ("ngx_int_t" type (:type "class") nil nil)) nil [135 288]) ("ngx_http_bdb_get_expire_pair" function (:typemodifiers ("static") :arguments (("r" variable (:pointer 1 :type ("ngx_http_request_t" type (:type "class") nil nil)) (reparse-symbol arg-sub-list) [336 358]) ("lcf" variable (:pointer 1 :type ("ngx_http_client_cache_filter_loc_conf_t" type (:type "class") nil nil)) (reparse-symbol arg-sub-list) [359 404]) ("e" variable (:pointer 1 :type ("time_t" type (:type "class") nil nil)) (reparse-symbol arg-sub-list) [405 415])) :type ("ngx_int_t" type (:type "class") nil nil)) nil [290 2956]) ("client_cache_sources" variable (:dereference 1 :default-value "{
+    {\"bdb\",
+     \"bdb:\",
+     ngx_http_bdb_get_expire_pair},
+    {\"upstream\",
+     \"upstream:\",
+     ngx_http_upstream_get_expire_pair},
+    {NULL, NULL, NULL}
+}" :type ("ngx_http_client_cache_source_t" type (:type "class") nil nil)) nil [2958 3178]))
+    :file "ngx_http_client_cache_filter_source.c"
+    :pointmax 3179
+    :unmatched-syntax 'nil
+    )
+   (semanticdb-table "insertpair.c"
+    :major-mode 'c-mode
+    :tags '(("db.h" include (:system-flag t) nil [1 16]) ("string.h" include (:system-flag t) nil [17 36]) ("DEFAULT_DB_PATH" variable (:constant-flag t) nil [46 106]) ("NONE" variable (:constant-flag t) nil [102 120]) ("GET" variable (:constant-flag t) nil [117 134]) ("PUT" variable (:constant-flag t) nil [131 142]) ("main" function (:arguments (("argc" variable (:type "int") (reparse-symbol arg-sub-list) [148 157]) ("argv" variable (:pointer 2 :type "char") (reparse-symbol arg-sub-list) [158 170])) :type "int") nil [139 2830]))
+    :file "insertpair.c"
+    :pointmax 2831
+    :unmatched-syntax 'nil
+    )
+   )
+  :file "semantic.cache"
+  :semantic-tag-version "2.0pre4"
+  :semanticdb-version "2.0pre4"
+  )
