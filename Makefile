@@ -1,14 +1,14 @@
 CC = gcc -g
-OBJECTS = insertpair.o
+OBJECTS = pairctl.o
 INCS  = -I /usr/local/BerkeleyDB.5.1/include
 DEPS = -L /usr/local/BerkeleyDB.5.1/lib
 
-insertpair : $(OBJECTS)
-	$(CC) -o insertpair -ldb $(OBJECTS) $(DEPS)
+pairctl : $(OBJECTS)
+	$(CC) -o pairctl -ldb $(OBJECTS) $(DEPS)
 
-insertpair.o: insertpair.c
-	$(CC) -c insertpair.c $(INCS)
+pairctl.o: pairctl.c
+	$(CC) -c pairctl.c $(INCS)
 
 .PHONY : clean
 clean :
-	-rm insertpair $(OBJECTS)
+	-rm pairctl $(OBJECTS)
