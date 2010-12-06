@@ -140,6 +140,10 @@ ngx_http_client_cache_header_filter(ngx_http_request_t *r)
     ngx_http_client_cache_filter_loc_conf_t *lcf;
     time_t expire = 0;
 
+    if (r != r->main) {
+        return ngx_http_next_header_filter(r);
+    }
+
     lcf = ngx_http_get_module_loc_conf(r, ngx_http_client_cache_filter_module);
 
     if (!lcf->client_cache) {
@@ -150,7 +154,7 @@ ngx_http_client_cache_header_filter(ngx_http_request_t *r)
         return ngx_http_next_header_filter(r);
     }
 
-    rc = lcf->get_expire_pair(r, lcf, &expire);
+    rc = lcf->methods.get_expire_pair(r, lcf, &expire);
 
     if (rc == NGX_OK) {
         rc = ngx_http_set_expire(r, expire);
@@ -184,7 +188,7 @@ ngx_http_client_cache(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
         if (!ngx_strncmp(value[1].data, source->prefix, strlen(source->prefix))) {
             lcf->path.data = value[1].data + strlen(source->prefix);
             lcf->path.len = value[1].len - strlen(source->prefix);
-            lcf->get_expire_pair = source->get_expire_pair;
+            lcf->methods = source->methods;
             break;
         }
     }
@@ -236,14 +240,111 @@ ngx_http_client_cache_filter_merge_loc_conf(ngx_conf_t *cf, void *parent, void *
 }
 
 static ngx_int_t
+init_client_cache_locations(ngx_cycle_t *c, ngx_array_t *locations)
+{
+    ngx_int_t ret = NGX_OK;
+    ngx_http_core_loc_conf_t **clcfp;
+    ngx_http_client_cache_filter_loc_conf_t *llcf;
+    ngx_uint_t i;
+
+    clcfp = locations->elts;
+
+    for(i = 0; i < locations->nelts; i++) {
+        llcf = clcfp[i]->loc_conf[ngx_http_client_cache_filter_module.ctx_index];
+        if (llcf->client_cache != 0) {
+            ret = llcf->methods.init_process(c, llcf);
+            if (ret != NGX_OK) {
+                ngx_log_error(NGX_LOG_ERR, c->log, 0,
+                              "Initilaize client cache module failed"
+                              " when starting process.");
+                return ret;
+            }
+        }
+
+        if (clcfp[i]->locations == NULL) {
+            continue;
+        }
+
+        ret = init_client_cache_locations(c, clcfp[i]->locations);
+        if (ret != NGX_OK) {
+            return ret;
+        }
+    }
+
+    return ret;
+}
+
+static ngx_int_t
 ngx_http_client_cache_filter_init_process(ngx_cycle_t *c)
 {
+    ngx_int_t ret = NGX_OK;
+    ngx_http_conf_ctx_t *ctx;
+    ngx_http_core_main_conf_t *cmcf;
+    ngx_http_core_srv_conf_t **cscfp;
+    ngx_uint_t i;
 
-    return NGX_OK;
+    ctx = (ngx_http_conf_ctx_t *)ngx_get_conf(c->conf_ctx, ngx_http_module);
+
+    cmcf = ctx->main_conf[ngx_http_core_module.ctx_index];
+    cscfp = cmcf->servers.elts;
+
+    for(i = 0; i< cmcf->servers.nelts; i++) {
+        ret = init_client_cache_locations(c, &(cscfp[i]->locations));
+        if (ret != NGX_OK) {
+            return ret;
+        }
+    }
+
+    return ret;
+}
+
+static void
+exit_client_cache_locations(ngx_cycle_t *c, ngx_array_t *locations)
+{
+    ngx_int_t ret = NGX_OK;
+    ngx_http_core_loc_conf_t **clcfp;
+    ngx_http_client_cache_filter_loc_conf_t *llcf;
+    ngx_uint_t i;
+
+    clcfp = locations->elts;
+
+    for(i = 0; i < locations->nelts; i++) {
+        llcf = clcfp[i]->loc_conf[ngx_http_client_cache_filter_module.ctx_index];
+        if (llcf->client_cache != 0) {
+            ret = llcf->methods.exit_process(c, llcf);
+            if (ret != NGX_OK) {
+                ngx_log_error(NGX_LOG_ERR, c->log, 0,
+                              "Clear client cache module failed"
+                              " when exit process.");
+            }
+        }
+
+        if (clcfp[i]->locations == NULL) {
+            continue;
+        }
+
+        ret = init_client_cache_locations(c, clcfp[i]->locations);
+    }
+
+    return;
 }
 
 static void
 ngx_http_client_cache_filter_exit_process(ngx_cycle_t *c)
 {
+    ngx_http_conf_ctx_t *ctx;
+    ngx_http_core_main_conf_t *cmcf;
+    ngx_http_core_srv_conf_t **cscfp;
+    ngx_uint_t i;
+
+    ctx = (ngx_http_conf_ctx_t *)ngx_get_conf(c->conf_ctx, ngx_http_module);
+
+    cmcf = ctx->main_conf[ngx_http_core_module.ctx_index];
+    cscfp = cmcf->servers.elts;
+
+    for(i = 0; i< cmcf->servers.nelts; i++) {
+        exit_client_cache_locations(c, &(cscfp[i]->locations));
+    }
+
     return;
 }
