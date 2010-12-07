@@ -11,4 +11,5 @@ pairctl.o: pairctl.c
 
 .PHONY : clean
 clean :
-	-rm pairctl $(OBJECTS)
+	test -d 'pairctl' || rm pairctl
+	test -d '$(OBJECTS)' || rm $(OBJECTS)

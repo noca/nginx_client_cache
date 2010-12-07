@@ -5,6 +5,7 @@
 #include <db.h>
 
 static char* ngx_http_client_cache(ngx_conf_t *cf, ngx_command_t *cmd, void *conf);
+static char* ngx_http_client_cache_match_type(ngx_conf_t *cf, ngx_command_t *cmd, void *conf);
 static ngx_int_t ngx_http_client_cache_filter_init(ngx_conf_t *cf);
 static void* ngx_http_client_cache_filter_create_loc_conf(ngx_conf_t *cf);
 static char* ngx_http_client_cache_filter_merge_loc_conf(ngx_conf_t *cf, void *parent, void *child);
@@ -13,10 +14,22 @@ static void ngx_http_client_cache_filter_exit_process(ngx_cycle_t *c);
 
 static ngx_command_t ngx_http_client_cache_filter_command[] = {
     { ngx_string("client_cache"),
-      NGX_HTTP_LOC_CONF | NGX_HTTP_MAIN_CONF | NGX_HTTP_SRV_CONF | NGX_CONF_TAKE1,
+      NGX_HTTP_LOC_CONF | NGX_CONF_TAKE1,
       ngx_http_client_cache,
       NGX_HTTP_LOC_CONF_OFFSET,
       offsetof(ngx_http_client_cache_filter_loc_conf_t, path),
+      NULL},
+    { ngx_string("client_cache_match_type"),
+      NGX_HTTP_LOC_CONF | NGX_CONF_TAKE1,
+      ngx_http_client_cache_match_type,
+      NGX_HTTP_LOC_CONF_OFFSET,
+      offsetof(ngx_http_client_cache_filter_loc_conf_t, match_type),
+      NULL},
+    { ngx_string("client_cache_cache_size"),
+      NGX_HTTP_LOC_CONF | NGX_CONF_TAKE1,
+      ngx_conf_set_num_slot,
+      NGX_HTTP_LOC_CONF_OFFSET,
+      offsetof(ngx_http_client_cache_filter_loc_conf_t, cache_size),
       NULL},
     ngx_null_command
 };
@@ -163,6 +176,28 @@ ngx_http_client_cache_header_filter(ngx_http_request_t *r)
     return ngx_http_next_header_filter(r);
 }
 
+static char*
+ngx_http_client_cache_match_type(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
+{
+    ngx_http_client_cache_filter_loc_conf_t *lcf = conf;
+    ngx_str_t *value;
+
+    if (cf->args->nelts != 2) {
+        return "invalid parameters";
+    }
+
+    value = cf->args->elts;
+
+    if (!ngx_strncmp(value[1].data, "absolute", strlen("absolute"))) {
+        lcf->match_type = NGX_HTTP_CLIENT_CACHE_FILTER_MATCH_TYPE_ABSOLUTE;
+    } else if (!ngx_strncmp(value[1].data, "prefix", strlen("prefix"))) {
+        lcf->match_type = NGX_HTTP_CLIENT_CACHE_FILTER_MATCH_TYPE_PREFIX;
+    } else {
+        return "unsupported match type";
+    }
+
+    return NGX_CONF_OK;
+}
 
 
 static char*
@@ -176,7 +211,6 @@ ngx_http_client_cache(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     }
 
     lcf->client_cache = 1;
-
     if (cf->args->nelts != 2) {
         return "invalid parameters";
     }
@@ -220,7 +254,8 @@ ngx_http_client_cache_filter_create_loc_conf(ngx_conf_t *cf)
     }
 
     conf->client_cache = 0;
-
+    conf->match_type = NGX_HTTP_CLIENT_CACHE_FILTER_MATCH_TYPE_ABSOLUTE;
+    conf->cache_size = NGX_CONF_UNSET_UINT;
     return conf;
 }
 
@@ -235,6 +270,7 @@ ngx_http_client_cache_filter_merge_loc_conf(ngx_conf_t *cf, void *parent, void *
     }
 
     ngx_conf_merge_str_value(prev->path, conf->path, "");
+    ngx_conf_merge_uint_value(prev->cache_size, conf->cache_size, 256);
 
     return NGX_CONF_OK;
 }

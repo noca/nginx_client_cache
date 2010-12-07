@@ -56,6 +56,22 @@ ngx_http_bdb_init_process(ngx_cycle_t *c, ngx_http_client_cache_filter_loc_conf_
         return NGX_ERROR;
     }
 
+    ret = dbp->set_cachesize(dbp,
+                             0,
+                             lcf->cache_size,
+                             0);
+
+    if (ret) {
+        ngx_log_error(NGX_LOG_ERR, c->log, 0,
+                      "Set cache size to %u(KB) failed. %s",
+                      lcf->cache_size, db_strerror(ret));
+        return NGX_ERROR;
+    } else {
+        ngx_log_error(NGX_LOG_INFO, c->log, 0,
+                      "Set cache size to %u(KB) successfully.",
+                      lcf->cache_size);
+    }
+
     open_flags = DB_RDONLY;
     ret = dbp->open(dbp,
                     NULL,
@@ -133,35 +149,53 @@ ngx_http_bdb_get_expire_pair(ngx_http_request_t *r, ngx_http_client_cache_filter
 
     key.size = r->uri.len;
     iter = r->uri.data + r->uri.len - 1;
-    for(;;) {
-        ret = dbp->get(dbp, NULL, &key, &value, 0);
-        if(ret == DB_NOTFOUND) {
-            /* iter reach the start of the uri */
-            if (iter == r->uri.data) {
-                ngx_log_error(NGX_LOG_INFO, c->log, 0,
+    if (lcf->match_type == NGX_HTTP_CLIENT_CACHE_FILTER_MATCH_TYPE_PREFIX) {
+        for(;;) {
+            ret = dbp->get(dbp, NULL, &key, &value, 0);
+            if(ret == DB_NOTFOUND) {
+                /* iter reach the start of the uri */
+                if (iter == r->uri.data) {
+                    ngx_log_error(NGX_LOG_INFO, c->log, 0,
                               "No corresponding cache time for"
-                              " uri '%s'.", r->uri.data);
-                err = NGX_ERROR;
-                break;
-            }
-            /* find the prefix split by the '/' */
-            for(;;) {
-                iter--;
-                key.size--;
-                if (*iter == '/' || iter == r->uri.data) {
+                                  " uri '%s'.", r->uri.data);
+                    err = NGX_ERROR;
                     break;
                 }
+                /* find the prefix split by the '/' */
+                for(;;) {
+                    iter--;
+                    key.size--;
+                    if (*iter == '/' || iter == r->uri.data) {
+                    break;
+                    }
+                }
+            } else if (ret) {
+                ngx_log_error(NGX_LOG_ALERT, c->log, 0,
+                              "Get cache time for %s failed. %s",
+                              r->uri.data, db_strerror(ret));
+                break;
+                err = NGX_ERROR;
+            } else {
+                *e = cache_time;
+                err = NGX_OK;
+                break;
             }
+        }
+    } else {
+        ret = dbp->get(dbp, NULL, &key, &value, 0);
+        if(ret == DB_NOTFOUND) {
+            ngx_log_error(NGX_LOG_INFO, c->log, 0,
+                          "No corresponding cache time for"
+                          " uri '%s'.", r->uri.data);
+            err = NGX_ERROR;
         } else if (ret) {
             ngx_log_error(NGX_LOG_ALERT, c->log, 0,
                           "Get cache time for %s failed. %s",
                           r->uri.data, db_strerror(ret));
-            break;
             err = NGX_ERROR;
         } else {
             *e = cache_time;
             err = NGX_OK;
-            break;
         }
     }
 
